@@ -1,0 +1,9 @@
+worlds:
+  - world
+title_messages:
+  5:
+    - "%1$s is doin mega killin (main title)"
+    - "That means 5 whole kills! (subtitle)"
+  10:
+    - "$1$s is killbominable"
+    - "(10 kil!)"

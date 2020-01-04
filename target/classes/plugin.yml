@@ -1,0 +1,7 @@
+name: Killstreaks
+version: 1.0-SNAPSHOT
+main: henry232323.killstreaks.Killstreaks
+api-version: 1.13
+authors: [henry232323]
+description: A plugin for tracking killstreaks
+website: http://github.com/henry232323/Killstreaks
