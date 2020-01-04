@@ -37,6 +37,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
             config.options().copyDefaults(true);
         }
 
+        worlds = new ArrayList<>();
         for (String w : worldnames) {
             World cworld = getServer().getWorld(w);
             if (cworld != null)
@@ -58,8 +59,8 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 int killCount = streaks.get(killer) + 1;
                 streaks.put(killer, killCount);
 
-                List<String> titleMessages = getConfig().getStringList("title_messages." + String.valueOf(killCount));
-                if (titleMessages != null && titleMessages.size() > 0) {
+                List<String> titleMessages = getConfig().getStringList("title_messages." + killCount);
+                if (titleMessages.size() > 0) {
                     Title t;
                     if (titleMessages.size() == 1) {
                         t = new Title(String.format(titleMessages.get(0), killer.getDisplayName()));
@@ -73,7 +74,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     }
                 }
 
-                String chatFmt = getConfig().getString("chat_messages." + String.valueOf(killCount));
+                String chatFmt = getConfig().getString("chat_messages." + killCount);
                 if (chatFmt != null) {
                     String chatMessage = String.format(chatFmt, killer.getDisplayName());
                     for (Player mplayer : eworld.getPlayers()) {
@@ -82,10 +83,5 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 }
             }
         }
-    }
-
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
     }
 }
