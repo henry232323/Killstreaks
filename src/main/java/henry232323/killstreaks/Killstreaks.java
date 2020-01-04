@@ -81,6 +81,13 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                         mplayer.sendMessage(chatMessage);
                     }
                 }
+
+                List<String> commands = getConfig().getStringList("commands." + killCount);
+                if (commands.size() != 0) {
+                    for (String command : commands) {
+                        getServer().dispatchCommand(getServer().getConsoleSender(), command);
+                    }
+                }
             }
         }
     }
