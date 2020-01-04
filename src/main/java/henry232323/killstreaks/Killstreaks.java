@@ -64,11 +64,11 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 if (titleMessages.size() > 0) {
                     Title t;
                     if (titleMessages.size() == 1) {
-                        t = new Title(String.format(titleMessages.get(0), killer.getDisplayName(), killed.getDisplayName()));
+                        t = new Title(String.format(titleMessages.get(0), killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()));
                     } else {
                         t = new Title(
-                                String.format(titleMessages.get(0), killer.getDisplayName(), killed.getDisplayName()),
-                                String.format(titleMessages.get(1), killer.getDisplayName(), killed.getDisplayName()));
+                                String.format(titleMessages.get(0), killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()),
+                                String.format(titleMessages.get(1), killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()));
                     }
                     for (Player mplayer : eworld.getPlayers()) {
                         mplayer.sendTitle(t);
@@ -77,7 +77,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
 
                 String chatFmt = getConfig().getString("chat_messages." + killCount);
                 if (chatFmt != null) {
-                    String chatMessage = String.format(chatFmt, killer.getDisplayName(), killed.getDisplayName());
+                    String chatMessage = String.format(chatFmt, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName());
                     for (Player mplayer : eworld.getPlayers()) {
                         mplayer.sendMessage(chatMessage);
                     }
@@ -86,7 +86,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 List<String> commands = getConfig().getStringList("commands." + killCount);
                 if (commands.size() != 0) {
                     for (String command : commands) {
-                        getServer().dispatchCommand(getServer().getConsoleSender(), String.format(command, killer.getDisplayName(), killed.getDisplayName()));
+                        getServer().dispatchCommand(getServer().getConsoleSender(), String.format(command, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()));
                     }
                 }
             }
