@@ -11,4 +11,4 @@ chat_messages:
   3: "%1$s is on 3 killstreak! wowie!"
 commands:
   5:
-    - "say %1$s good job!"
+    - "tell %1$s good job!"

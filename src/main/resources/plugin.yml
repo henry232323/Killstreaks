@@ -4,3 +4,18 @@ main: henry232323.killstreaks.Killstreaks
 authors: [henry232323]
 description: A plugin for tracking killstreaks
 website: http://github.com/henry232323/Killstreaks
+api-version: 1.15
+
+permissions:
+  killstreaks.*:
+    description: All permissions for killstreaks
+    children:
+      killstreaks.reload: true
+  killstreaks.reload:
+    description: Permission to reload the plugin
+    default: op
+
+commands:
+  killstreaks:
+    description: View plugin info and reload the plugin
+    permission: killstreaks.*
