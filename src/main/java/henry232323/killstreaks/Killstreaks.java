@@ -32,13 +32,10 @@ public final class Killstreaks extends JavaPlugin implements Listener {
         }
 
         getServer().getPluginManager().registerEvents(this, this);
+        saveDefaultConfig();
         config = getConfig();
 
         List<String> worldnames = config.getStringList("worlds");
-        if (worldnames.size() == 0) {
-            worldnames = new ArrayList<>();
-            config.options().copyDefaults(true);
-        }
 
         worlds = new ArrayList<>();
         for (String w : worldnames) {
@@ -108,19 +105,10 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     return false;
                 }
                 if (args[0].equalsIgnoreCase("reload")) {
-                    File dfolder = getDataFolder();
-                    if (!dfolder.exists()) {
-                        dfolder.mkdir();
-                    }
-
+                    saveDefaultConfig();
                     config = getConfig();
 
                     List<String> worldnames = config.getStringList("worlds");
-                    if (worlds == null) {
-                        worldnames = new ArrayList<String>();
-                        config.options().copyDefaults(true);
-                    }
-
                     worlds = new ArrayList<>();
                     for (String w : worldnames) {
                         World cworld = getServer().getWorld(w);
