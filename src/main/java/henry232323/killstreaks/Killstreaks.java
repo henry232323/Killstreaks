@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -20,27 +21,11 @@ import java.util.List;
 public final class Killstreaks extends JavaPlugin implements Listener {
     private List<World> worlds;
     private HashMap<Player, Integer> streaks = new HashMap<>();
-    FileConfiguration config;
 
     private void initConfig() {
-        try {
-            if (!getDataFolder().exists()) {
-                getDataFolder().mkdirs();
-            }
-            File file = new File(getDataFolder(), "config.yml");
-            if (!file.exists()) {
-                getLogger().info("Config.yml not found, creating!");
-                saveDefaultConfig();
-            } else {
-                getLogger().info("Config.yml found, loading!");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        saveDefaultConfig();
 
-        config = getConfig();
-
-        List<String> worldnames = config.getStringList("worlds");
+        List<String> worldnames = getConfig().getStringList("worlds");
 
         worlds = new ArrayList<>();
         for (String w : worldnames) {
@@ -50,9 +35,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
             else
                 getLogger().warning("Cannot enable killstreaks in world " + w + ", because it does not exist!");
         }
-
     }
-
 
     @Override
     public void onEnable() {
@@ -62,12 +45,16 @@ public final class Killstreaks extends JavaPlugin implements Listener {
     }
 
     @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player p = event.getPlayer();
+        streaks.remove(p);
+    }
+
+    @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player killer = event.getEntity().getKiller();
         Player killed = event.getEntity();
-        if (streaks.containsKey(killed)) {
-            streaks.remove(killed);
-        }
+
         if (killer != null) {
             World eworld = event.getEntity().getWorld();
 
@@ -77,7 +64,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 int killCount = streaks.get(killer) + 1;
                 streaks.put(killer, killCount);
 
-                List<String> titleMessages = config.getStringList("title_messages." + killCount);
+                List<String> titleMessages = getConfig().getStringList("title_messages." + killCount);
                 if (titleMessages.size() > 0) {
                     Title t;
                     if (titleMessages.size() == 1) {
@@ -92,7 +79,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     }
                 }
 
-                String chatFmt = config.getString("chat_messages." + killCount);
+                String chatFmt = getConfig().getString("chat_messages." + killCount);
                 if (chatFmt != null) {
                     String chatMessage = String.format(chatFmt, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName());
                     for (Player mplayer : eworld.getPlayers()) {
@@ -100,7 +87,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     }
                 }
 
-                List<String> commands = config.getStringList("commands." + killCount);
+                List<String> commands = getConfig().getStringList("commands." + killCount);
                 if (commands.size() != 0) {
                     for (String command : commands) {
                         getServer().dispatchCommand(getServer().getConsoleSender(), String.format(command, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()));
@@ -108,18 +95,17 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 }
             }
         }
+        streaks.put(killed, 0);
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         try {
             if (command.getName().equalsIgnoreCase("killstreaks")) {
-                if (args.length == 0) {
+                if (args.length != 1) {
                     String version = getDescription().getVersion();
                     sender.sendMessage(ChatColor.GOLD + "Killstreaks Version " + version);
                     return true;
-                } else if (args.length != 1) {
-                    return false;
                 }
                 if (args[0].equalsIgnoreCase("reload")) {
                     initConfig();
