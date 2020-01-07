@@ -22,17 +22,22 @@ public final class Killstreaks extends JavaPlugin implements Listener {
     private HashMap<Player, Integer> streaks = new HashMap<>();
     FileConfiguration config;
 
-
-    @Override
-    public void onEnable() {
-        // Plugin startup logic
-        File dfolder = getDataFolder();
-        if (!dfolder.exists()) {
-            dfolder.mkdir();
+    private void initConfig() {
+        try {
+            if (!getDataFolder().exists()) {
+                getDataFolder().mkdirs();
+            }
+            File file = new File(getDataFolder(), "config.yml");
+            if (!file.exists()) {
+                getLogger().info("Config.yml not found, creating!");
+                saveDefaultConfig();
+            } else {
+                getLogger().info("Config.yml found, loading!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        getServer().getPluginManager().registerEvents(this, this);
-        saveDefaultConfig();
         config = getConfig();
 
         List<String> worldnames = config.getStringList("worlds");
@@ -45,14 +50,26 @@ public final class Killstreaks extends JavaPlugin implements Listener {
             else
                 getLogger().warning("Cannot enable killstreaks in world " + w + ", because it does not exist!");
         }
+
+    }
+
+
+    @Override
+    public void onEnable() {
+        // Plugin startup logic
+        getServer().getPluginManager().registerEvents(this, this);
+        initConfig();
     }
 
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player killer = event.getEntity().getKiller();
+        Player killed = event.getEntity();
+        if (streaks.containsKey(killed)) {
+            streaks.remove(killed);
+        }
         if (killer != null) {
             World eworld = event.getEntity().getWorld();
-            Player killed = event.getEntity();
 
             if (worlds.contains(eworld)) {
                 if (!streaks.containsKey(killer))
@@ -60,7 +77,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 int killCount = streaks.get(killer) + 1;
                 streaks.put(killer, killCount);
 
-                List<String> titleMessages = getConfig().getStringList("title_messages." + killCount);
+                List<String> titleMessages = config.getStringList("title_messages." + killCount);
                 if (titleMessages.size() > 0) {
                     Title t;
                     if (titleMessages.size() == 1) {
@@ -75,7 +92,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     }
                 }
 
-                String chatFmt = getConfig().getString("chat_messages." + killCount);
+                String chatFmt = config.getString("chat_messages." + killCount);
                 if (chatFmt != null) {
                     String chatMessage = String.format(chatFmt, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName());
                     for (Player mplayer : eworld.getPlayers()) {
@@ -83,7 +100,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     }
                 }
 
-                List<String> commands = getConfig().getStringList("commands." + killCount);
+                List<String> commands = config.getStringList("commands." + killCount);
                 if (commands.size() != 0) {
                     for (String command : commands) {
                         getServer().dispatchCommand(getServer().getConsoleSender(), String.format(command, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()));
@@ -105,18 +122,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     return false;
                 }
                 if (args[0].equalsIgnoreCase("reload")) {
-                    saveDefaultConfig();
-                    config = getConfig();
-
-                    List<String> worldnames = config.getStringList("worlds");
-                    worlds = new ArrayList<>();
-                    for (String w : worldnames) {
-                        World cworld = getServer().getWorld(w);
-                        if (cworld != null)
-                            worlds.add(cworld);
-                        else
-                            getLogger().warning("Cannot enable killstreaks in world " + w + ", because it does not exist!");
-                    }
+                    initConfig();
                     sender.sendMessage(ChatColor.GOLD + "Killstreaks reloaded");
                     return true;
                 }
