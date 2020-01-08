@@ -5,6 +5,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,27 +14,48 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public final class Killstreaks extends JavaPlugin implements Listener {
-    private List<World> worlds;
+    private List<String> worlds;
     private HashMap<Player, Integer> streaks = new HashMap<>();
+    private HashMap<Integer, List<String>> titles;
+    private HashMap<Integer, String> messages;
+    private HashMap<Integer, List<String>> commands;
 
     private void initConfig() {
         saveDefaultConfig();
+        FileConfiguration config = getConfig();
+        worlds = config.getStringList("worlds");
 
-        List<String> worldnames = getConfig().getStringList("worlds");
+        titles = new HashMap<>();
+        ConfigurationSection tsect = config.getConfigurationSection("title_messages");
+        if (tsect != null) {
+            Set<String> stringTitles = tsect.getKeys(false);
+            for (String t : stringTitles) {
+                System.out.println(t);
+                titles.put(Integer.parseInt(t), config.getStringList("title_messages." + t));
+            }
+        }
 
-        worlds = new ArrayList<>();
-        for (String w : worldnames) {
-            World cworld = getServer().getWorld(w);
-            if (cworld != null)
-                worlds.add(cworld);
-            else
-                getLogger().warning("Cannot enable killstreaks in world " + w + ", because it does not exist!");
+        messages = new HashMap<>();
+        ConfigurationSection msect = config.getConfigurationSection("chat_messages");
+        if (msect != null) {
+            Set<String> stringMessages = msect.getKeys(false);
+            for (String m : stringMessages) {
+                messages.put(Integer.parseInt(m), config.getString("chat_messages." + m));
+            }
+        }
+
+        commands = new HashMap<>();
+        ConfigurationSection csect = config.getConfigurationSection("commands");
+        if (csect != null) {
+            Set<String> stringCommands = csect.getKeys(false);
+            for (String c : stringCommands) {
+                commands.put(Integer.parseInt(c), config.getStringList("commands." + c));
+            }
         }
     }
 
@@ -58,14 +80,15 @@ public final class Killstreaks extends JavaPlugin implements Listener {
         if (killer != null) {
             World eworld = event.getEntity().getWorld();
 
-            if (worlds.contains(eworld)) {
+            if (worlds.contains(eworld.getName())) {
                 if (!streaks.containsKey(killer))
                     streaks.put(killer, 0);
                 int killCount = streaks.get(killer) + 1;
                 streaks.put(killer, killCount);
 
-                List<String> titleMessages = getConfig().getStringList("title_messages." + killCount);
-                if (titleMessages.size() > 0) {
+
+                if (titles.containsKey(killCount)) {
+                    List<String> titleMessages = titles.get(killCount);
                     Title t;
                     if (titleMessages.size() == 1) {
                         t = new Title(String.format(titleMessages.get(0), killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()));
@@ -79,17 +102,17 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                     }
                 }
 
-                String chatFmt = getConfig().getString("chat_messages." + killCount);
-                if (chatFmt != null) {
+                if (messages.containsKey(killCount)) {
+                    String chatFmt = messages.get(killCount);
                     String chatMessage = String.format(chatFmt, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName());
                     for (Player mplayer : eworld.getPlayers()) {
                         mplayer.sendMessage(chatMessage);
                     }
                 }
 
-                List<String> commands = getConfig().getStringList("commands." + killCount);
-                if (commands.size() != 0) {
-                    for (String command : commands) {
+                if (commands.containsKey(killCount)) {
+                    List<String> lcommands = commands.get(killCount);
+                    for (String command : lcommands) {
                         getServer().dispatchCommand(getServer().getConsoleSender(), String.format(command, killer.getName(), killed.getName(), killer.getDisplayName(), killed.getDisplayName()));
                     }
                 }
