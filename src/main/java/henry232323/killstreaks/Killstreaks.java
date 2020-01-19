@@ -1,10 +1,7 @@
 package henry232323.killstreaks;
 
 import com.destroystokyo.paper.Title;
-import org.bukkit.ChatColor;
 import org.bukkit.World;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -25,7 +22,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
     private HashMap<Integer, String> messages;
     private HashMap<Integer, List<String>> commands;
 
-    private void initConfig() {
+    public void initConfig() {
         saveDefaultConfig();
         FileConfiguration config = getConfig();
         worlds = config.getStringList("worlds");
@@ -63,6 +60,7 @@ public final class Killstreaks extends JavaPlugin implements Listener {
     public void onEnable() {
         // Plugin startup logic
         getServer().getPluginManager().registerEvents(this, this);
+        this.getCommand("killstreaks").setExecutor(new KillstreakCommandExecutor(this));
         initConfig();
     }
 
@@ -118,29 +116,6 @@ public final class Killstreaks extends JavaPlugin implements Listener {
                 }
             }
         }
-        streaks.put(killed, 0);
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        try {
-            if (command.getName().equalsIgnoreCase("killstreaks")) {
-                if (args.length != 1) {
-                    String version = getDescription().getVersion();
-                    sender.sendMessage(ChatColor.GOLD + "Killstreaks Version " + version);
-                    return true;
-                }
-                if (args[0].equalsIgnoreCase("reload")) {
-                    initConfig();
-                    sender.sendMessage(ChatColor.GOLD + "Killstreaks reloaded");
-                    return true;
-                }
-            }
-
-            return false;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
+        streaks.remove(killed);
     }
 }
